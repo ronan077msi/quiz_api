@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 
-// TEST ROUTE
+// TEST
 app.get('/', (req, res) => {
   res.send(' Backend Gasipro Quiz fonctionne !');
 });
@@ -46,18 +46,17 @@ app.post('/classes', async (req, res) => {
   }
 });
 
-// Supprimer une classe
 app.delete('/classes/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Vérifier si la classe existe
+    // Vérification
     const [rows] = await pool.query('SELECT * FROM classes WHERE id = ?', [id]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Classe introuvable' });
     }
 
-    // Supprimer la classe
+    // Supprimer une classe
     await pool.query('DELETE FROM classes WHERE id = ?', [id]);
     res.json({ message: 'Classe supprimée avec succès' });
   } catch (err) {
@@ -66,7 +65,7 @@ app.delete('/classes/:id', async (req, res) => {
   }
 });
 
-// === CLASSES - MODIFICATION ===
+// === MODIFICATION ===
 app.put('/classes/:id', async (req, res) => {
   const { id } = req.params;
   const { nom } = req.body;
@@ -197,7 +196,6 @@ app.delete('/matieres/:id', async (req, res) => {
 // QUESTIONS — PUZZLE CORRIGÉ (ordre_correct)
 // ======================================================================
 
-// Récupérer toutes les questions d'un quiz
 app.get('/quiz/:quiz_id/questions', async (req, res) => {
   const { quiz_id } = req.params;
   try {
@@ -307,7 +305,7 @@ app.post('/questions', async (req, res) => {
   }
 });
 
-// Modifier une question
+// Modifi une question
 app.put('/questions/:id', async (req, res) => {
   const { id } = req.params;
   const {
@@ -390,7 +388,7 @@ app.put('/questions/:id', async (req, res) => {
   }
 });
 
-// Supprimer une question
+// Supprimer
 app.delete('/questions/:id', async (req, res) => {
   const { id } = req.params;
   const conn = await pool.getConnection();
@@ -455,7 +453,6 @@ app.post('/pins', async (req, res) => {
   }
 });
 
-// Activer / Désactiver un PIN
 app.put('/pins/:id/status', async (req, res) => {
   const { id } = req.params;
   const { is_active } = req.body;
@@ -475,8 +472,7 @@ app.put('/pins/:id/status', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-
-// Supprimer un PIN (seulement s’il n’est pas utilisé)
+// raha tsy amppiasaina
 app.delete('/pins/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -528,7 +524,7 @@ app.post('/users/register', async (req, res) => {
   }
 });
 
-// === back-end/index.js → REMPLACE LA ROUTE /users/login ===
+// === back-end ===
 app.post('/users/login', async (req, res) => {
   const { identifiant, pin_code } = req.body;
   if (!identifiant || !pin_code) return res.status(400).json({ error: 'Identifiant et PIN requis' });
@@ -606,26 +602,18 @@ app.post('/admin/login', async (req, res) => {
   if (!password) return res.status(400).json({ error: 'Mot de passe requis' });
 
   try {
-    // 1. Vérifier si un admin est déjà connecté
     const [logged] = await pool.query('SELECT id FROM admins WHERE is_logged_in = 1');
     if (logged.length > 0) {
       return res.status(403).json({ error: 'Un admin est déjà connecté. Déconnexion requise.' });
     }
-
-    // 2. Récupérer les admins avec le champ password_hash
     const [admins] = await pool.query('SELECT id, username, password_hash FROM admins');
-    
-    // 3. Trouver l'admin avec le bon mot de passe
     const admin = admins.find(a => bcrypt.compareSync(password, a.password_hash));
 
     if (!admin) {
       return res.status(401).json({ error: 'Mot de passe incorrect' });
     }
 
-    // 4. Marquer comme connecté
     await pool.query('UPDATE admins SET is_logged_in = 1 WHERE id = ?', [admin.id]);
-
-    // 5. Réponse
     res.json({
       message: 'Connexion réussie',
       admin: { id: admin.id, username: admin.username }
@@ -655,8 +643,6 @@ app.post('/admin/logout', async (req, res) => {
 // ====================
 // ADMIN PIN MANAGEMENT
 // ====================
-
-// Endpoint pour récupérer tous les PIN actifs
 app.get('/admin/pins/active', async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -669,7 +655,6 @@ app.get('/admin/pins/active', async (req, res) => {
   }
 });
 
-// Endpoint pour activer ou désactiver un PIN
 app.put('/admin/pins/:id/status', async (req, res) => {
   const { id } = req.params;
   const { is_active } = req.body;
@@ -695,7 +680,6 @@ app.put('/admin/pins/:id/status', async (req, res) => {
   }
 });
 
-// Endpoint pour supprimer un PIN
 app.delete('/admin/pins/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -736,7 +720,7 @@ const path = require('path');
 // Configuration du stockage des images
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'assets/img/questions'); // dossier où seront stockées les images
+    cb(null, 'assets/img/questions');
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -744,7 +728,7 @@ const storage = multer.diskStorage({
   }
 });
 
-// Filtrage pour n'accepter que les images et GIF
+// Filtrage
 const upload = multer({ 
   storage,
   fileFilter: (req, file, cb) => {
@@ -754,13 +738,10 @@ const upload = multer({
     }
     cb(null, true);
   },
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
+  limits: { fileSize: 5 * 1024 * 1024 } // 5mo max
 });
 
-// Rendre le dossier accessible depuis Express
 app.use('/assets/img/questions', express.static('assets/img/questions'));
-
-// Endpoint upload d'image pour les questions
 app.post('/questions/upload', upload.single('image'), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'Aucune image reçue' });
@@ -776,7 +757,6 @@ app.post('/questions/upload', upload.single('image'), (req, res) => {
 // QUIZ
 // ======================================================================
 
-// Récupérer tous les quiz (avec is_active)
 app.get('/quiz', async (req, res) => {
   const { class_id, matiere_id, is_active } = req.query;
   try {
@@ -796,7 +776,6 @@ app.get('/quiz', async (req, res) => {
   }
 });
 
-// Créer un quiz
 app.post('/quiz', async (req, res) => {
   const { class_id, matiere_id, titre, description, type='qcm', created_by } = req.body;
   if (!class_id || !titre) return res.status(400).json({ error: 'class_id et titre requis' });
@@ -846,7 +825,7 @@ app.delete('/quiz/:id', async (req, res) => {
   }
 });
 
-// === SOUMISSION QUIZ (élève) ===
+// === SOUMISSION QUIZ ===
 app.post('/api/submit', async (req, res) => {
   const { quiz_id, identifiant, answers, time_taken = 0 } = req.body;
   if (!identifiant || !Array.isArray(answers) || answers.length === 0) {
@@ -856,21 +835,19 @@ app.post('/api/submit', async (req, res) => {
   let score = 0; 
 
   try {
-    // Récupérer user_id via identifiant
+    // Récupérer user_id
     const [users] = await pool.query('SELECT id FROM users WHERE identifiant = ?', [identifiant]);
     if (users.length === 0) return res.status(404).json({ error: 'Utilisateur introuvable' });
     const user_id = users[0].id;
-
-    // Vérifier que le quiz est actif
+    
     const [quizCheck] = await pool.query('SELECT is_active FROM quiz WHERE id = ?', [quiz_id]);
     if (quizCheck.length === 0 || !quizCheck[0].is_active) {
       return res.status(403).json({ error: 'Quiz non disponible' });
     }
 
-    // Calculer le score
     for (const a of answers) {
       if (a.choice_index !== undefined) {
-        // QCM / TRUEFALSE
+        // QCM / vrai_ou_faux
         const [r] = await pool.query(
           'SELECT est_correct FROM reponses WHERE question_id = ? AND choice_index = ?',
           [a.question_id, a.choice_index]
@@ -890,7 +867,6 @@ app.post('/api/submit', async (req, res) => {
         }
       }
       else if (a.puzzle_order && Array.isArray(a.puzzle_order)) {
-        // PUZZLE : comparer avec ordre_correct
         const [correct] = await pool.query(
           'SELECT choice_index FROM reponses WHERE question_id = ? ORDER BY ordre_correct',
           [a.question_id]
@@ -901,8 +877,6 @@ app.post('/api/submit', async (req, res) => {
         }
       }
     }
-
-    // ENREGISTRER LE SCORE UNIQUEMENT APRÈS LA BOUCLE
     await pool.query(
       'INSERT INTO scores (quiz_id, user_id, score, max_score, time_taken) VALUES (?, ?, ?, ?, ?)',
       [quiz_id, user_id, score, answers.length, time_taken]
