@@ -9,13 +9,12 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 150,  // 150 joueurs simultanés
-  queueLimit: 300,       // mettre en file d’attente les requêtes
-  connectTimeout: 10000, // Timeout de 10s 
-  timezone: 'Z'          // UTC 
+  connectionLimit: 150, 
+  queueLimit: 300,      
+  connectTimeout: 10000, 
+  timezone: 'Z'         
 });
 
-// Vérification automatiquement de la connexion au lancement
 (async () => {
   try {
     const conn = await pool.getConnection();
